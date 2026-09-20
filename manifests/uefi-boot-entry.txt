@@ -1,0 +1,12 @@
+Captured 2026-09-20 before moving Fedora partitions on /dev/nvme0n1.
+
+BootOrder: 0004,0001,0002,0000
+Boot0004: Fedora
+  ESP: /dev/nvme0n1p5
+  GPT partition UUID: 031e6e91-8f59-4a62-a097-867209cc3e95
+  Start: 503949312 sectors; size: 1171876 sectors
+  Loader: \EFI\fedora\shimx64.efi
+
+Boot0000, Boot0001, and Boot0002 are Windows Boot Manager entries on
+/dev/nvme0n1p1. Moving p5 may require creating a new Fedora UEFI boot entry
+with its new start sector before leaving the live environment.
