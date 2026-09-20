@@ -4,6 +4,10 @@ Selected settings from the Fedora 44 installation of `khuongduy354`, captured Se
 
 This is a settings backup, not a full system image. Development files, games, installed applications, browser profiles, cookies, passwords, SSH keys, cloud credentials, Sunshine pairing keys, and authentication state are excluded.
 
+The device-specific [GParted partition plan](docs/PARTITION-PLAN.md) records the
+planned 100 GiB transfer from Fedora to Windows C:. It is a reference for this
+disk layout, not a restore procedure for other computers.
+
 ## Restoring
 
 1. Install Fedora and the applications you want. `manifests/rpm-packages.txt` is an inventory, not a command to install every package. External repositories are listed under `system/etc/yum.repos.d/`.
