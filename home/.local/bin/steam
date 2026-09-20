@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -u
+
+# Sunshine's headless X11 framebuffer reports no connected output. Run Steam
+# inside Gamescope in that case so Proton games get a stable Vulkan surface.
+if xrandr --query 2>/dev/null | grep -q ' connected'; then
+    exec /usr/bin/steam "$@"
+fi
+
+screen_size=$(xrandr --current 2>/dev/null | \
+    awk '/current/{gsub(/,/, "", $10); print $8 "x" $10; exit}')
+screen_size=${screen_size:-1920x1080}
+screen_width=${screen_size%x*}
+screen_height=${screen_size#*x}
+
+# If Steam is already hosted by Gamescope, a second Steam invocation forwards
+# URLs/arguments to the running instance instead of opening another compositor.
+if pgrep -x gamescope >/dev/null && pgrep -f '/steam.sh' >/dev/null; then
+    exec /usr/bin/steam "$@"
+fi
+
+setsid gamescope --backend sdl \
+    -W "$screen_width" -H "$screen_height" \
+    -w "$screen_width" -h "$screen_height" \
+    -f -e --force-windows-fullscreen -- \
+    /usr/bin/steam "$@" >/tmp/steam-gamescope.log 2>&1 < /dev/null &
+gamescope_pid=$!
+
+# Put the compositor on the dedicated Steam workspace and remove all outer
+# decorations. Gamescope handles the Steam/game windows within it.
+for _ in {1..40}; do
+    if i3-msg -t get_tree 2>/dev/null | grep -q '"class":"gamescope"'; then
+        i3-msg '[class="gamescope"] move container to workspace number 3, border pixel 0, fullscreen enable, focus' \
+            >/dev/null 2>&1
+        break
+    fi
+    sleep 0.25
+done
+
+# Gamescope briefly drops its outer fullscreen hint when switching from Steam
+# to a game. Reassert it so i3's bar and frame never reappear around the game.
+(
+    while kill -0 "$gamescope_pid" 2>/dev/null; do
+        i3-msg '[class="gamescope"] border pixel 0, fullscreen enable' \
+            >/dev/null 2>&1 || true
+        sleep 2
+    done
+) >/dev/null 2>&1 &

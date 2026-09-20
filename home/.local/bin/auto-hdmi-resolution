@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# Apply each monitor's preferred mode when a display is plugged in or swapped.
+# Ignore ordinary mode changes so Sunshine can select a streaming resolution.
+last_displays=
+
+while true; do
+    displays=
+    connected=()
+    for port in 1 2; do
+        display=disconnected
+        for connector in /sys/class/drm/card*-HDMI-A-"$port"; do
+            if [[ -r "$connector/status" && $(<"$connector/status") == connected ]]; then
+                display=$(sha256sum "$connector/edid" 2>/dev/null)
+                [[ -n "$display" ]] || display=connected
+                connected+=("$port")
+                break
+            fi
+        done
+        displays+="$port:$display;"
+    done
+
+    if [[ "$displays" != "$last_displays" ]]; then
+        case "${connected[*]}" in
+            '1 2') xrandr --output HDMI-1 --auto --primary --pos 0x0 \
+                           --output HDMI-2 --auto --right-of HDMI-1 ;;
+            '1')   xrandr --output HDMI-2 --off \
+                           --output HDMI-1 --auto --primary --pos 0x0 ;;
+            '2')   xrandr --output HDMI-1 --off \
+                           --output HDMI-2 --auto --primary --pos 0x0 ;;
+            '')    true ;;
+        esac && last_displays=$displays
+    fi
+
+    sleep 2
+done

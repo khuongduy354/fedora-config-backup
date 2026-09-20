@@ -1,0 +1,29 @@
+# This repository is intentionally an allowlist of copied settings.
+# Keep authentication and runtime data out of future additions.
+developments/
+**/.ssh/
+**/.gnupg/
+**/.pki/
+**/.android/
+**/.docker/
+**/.bastiond/
+**/.cache/
+**/.codex/
+**/.config/gh/
+**/.config/gcloud/
+**/.config/Codex/
+**/.config/mozilla/
+**/.config/pulse/
+**/.config/sunshine/credentials/
+**/.local/share/
+**/auth.json
+**/hosts.yml
+**/*credential*
+**/*secret*
+**/*token*
+**/*password*
+**/*key*.pem
+**/*.sqlite*
+**/*.db
+**/*.log*
+**/.env*

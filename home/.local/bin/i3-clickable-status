@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+
+import json
+import signal
+import subprocess
+import sys
+import threading
+
+
+SLIDER = "/home/khuongduy354/.local/bin/i3-brightness-slider"
+I3STATUS_CONFIG = "/home/khuongduy354/.config/i3status/config"
+
+
+def brightness_percent():
+    try:
+        details = subprocess.check_output(
+            ["xrandr", "--verbose"], text=True, stderr=subprocess.DEVNULL
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return "?"
+
+    connected = False
+    for line in details.splitlines():
+        fields = line.split()
+        if fields and not line[0].isspace():
+            connected = len(fields) > 1 and fields[1] == "connected"
+        elif connected and fields[:1] == ["Brightness:"]:
+            return str(round(float(fields[1]) * 100))
+    return "?"
+
+
+def handle_clicks():
+    for line in sys.stdin:
+        text = line.strip().lstrip(",")
+        if not text or text in ("[", "]"):
+            continue
+        try:
+            event = json.loads(text)
+        except json.JSONDecodeError:
+            continue
+        if event.get("name") == "brightness" and event.get("button") == 1:
+            subprocess.Popen(
+                [SLIDER],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+
+
+def main():
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    status = subprocess.Popen(
+        ["i3status", "-c", I3STATUS_CONFIG],
+        stdout=subprocess.PIPE,
+        text=True,
+        bufsize=1,
+    )
+
+    header = json.loads(status.stdout.readline())
+    header["click_events"] = True
+    print(json.dumps(header), flush=True)
+    print("[", flush=True)
+
+    threading.Thread(target=handle_clicks, daemon=True).start()
+
+    emitted = False
+    for line in status.stdout:
+        text = line.strip()
+        if not text or text == "[":
+            continue
+        if text.startswith(","):
+            text = text[1:].lstrip()
+        if text.endswith(","):
+            text = text[:-1].rstrip()
+        try:
+            blocks = json.loads(text)
+        except json.JSONDecodeError:
+            continue
+
+        brightness = {
+            "name": "brightness",
+            "full_text": f" ☀ {brightness_percent()}% ",
+            "color": "#FFFFFF",
+            "background": "#1E3A8A",
+            "separator": False,
+        }
+        prefix = "," if emitted else ""
+        print(prefix + json.dumps([brightness] + blocks), flush=True)
+        emitted = True
+
+
+if __name__ == "__main__":
+    main()

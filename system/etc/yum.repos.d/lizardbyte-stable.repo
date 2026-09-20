@@ -1,0 +1,32 @@
+
+# Source: LizardByte
+# Site: https://app.lizardbyte.dev/support
+# Repository: LizardByte / stable
+# Description: Stable releases for LizardByte projects.
+
+[lizardbyte-stable]
+name=lizardbyte-stable
+baseurl=https://dl.cloudsmith.io/public/lizardbyte/stable/rpm/fedora/44/$basearch
+repo_gpgcheck=1
+enabled=1
+skip_if_unavailable=1
+gpgkey=https://dl.cloudsmith.io/public/lizardbyte/stable/gpg.04C871E8D308324E.key
+gpgcheck=1
+sslverify=1
+sslcacert=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+metadata_expire=300
+type=rpm-md
+
+
+[lizardbyte-stable-source]
+name=lizardbyte-stable-source
+baseurl=https://dl.cloudsmith.io/public/lizardbyte/stable/rpm/fedora/44/SRPMS
+repo_gpgcheck=1
+enabled=1
+skip_if_unavailable=1
+gpgkey=https://dl.cloudsmith.io/public/lizardbyte/stable/gpg.04C871E8D308324E.key
+gpgcheck=1
+sslverify=1
+sslcacert=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+metadata_expire=300
+type=rpm-md

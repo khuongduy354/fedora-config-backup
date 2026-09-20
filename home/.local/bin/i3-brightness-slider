@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -u
+
+output="$(xrandr --query | awk '/ connected/{print $1; exit}')"
+if [[ -z "$output" ]]; then
+    exit 1
+fi
+
+current="$(xrandr --verbose | awk -v wanted="$output" '
+    $1 == wanted && $2 == "connected" { found = 1; next }
+    found && $1 == "Brightness:" { print $2; exit }
+')"
+current="${current:-1.0}"
+percent="$(awk -v value="$current" 'BEGIN { printf "%.0f", value * 100 }')"
+
+yad --scale \
+    --title="Display brightness" \
+    --text="Brightness for $output" \
+    --min-value=30 \
+    --max-value=120 \
+    --step=5 \
+    --value="$percent" \
+    --print-partial \
+    --width=420 \
+    --button="Close":0 2>/dev/null |
+while IFS= read -r value; do
+    brightness="$(awk -v value="$value" 'BEGIN { printf "%.2f", value / 100 }')"
+    xrandr --output "$output" --brightness "$brightness"
+done
